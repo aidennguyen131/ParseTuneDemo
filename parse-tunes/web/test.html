@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parse-Tunes API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        button { padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin: 20px 0; padding: 15px; background: #f8f9fa; border-left: 4px solid #007bff; }
+        .error { border-left-color: #dc3545; background: #f8d7da; }
+        .loading { color: #666; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Parse-Tunes API Test</h1>
+    
+    <div>
+        <h2>📱 Test Top Charts</h2>
+        <button onclick="testTopCharts()">Get Top Free iPhone Apps (US)</button>
+        <button onclick="testTopChartsGames()">Get Top Games (Germany)</button>
+        <div id="charts-result" class="result" style="display: none;"></div>
+    </div>
+
+    <div>
+        <h2>🔍 Test App Search</h2>
+        <input type="text" id="search-input" placeholder="Enter search term" value="calculator">
+        <button onclick="testSearch()">Search Apps</button>
+        <div id="search-result" class="result" style="display: none;"></div>
+    </div>
+
+    <div>
+        <h2>📋 Test App Details</h2>
+        <input type="text" id="app-id-input" placeholder="Enter App ID" value="284882215">
+        <button onclick="testAppDetails()">Get App Details</button>
+        <div id="details-result" class="result" style="display: none;"></div>
+    </div>
+
+    <div>
+        <h2>🔗 API Health Check</h2>
+        <button onclick="testHealth()">Check API Health</button>
+        <div id="health-result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8787';
+
+        function showResult(elementId, content, isError = false) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = content;
+            element.className = isError ? 'result error' : 'result';
+            element.style.display = 'block';
+        }
+
+        function showLoading(elementId) {
+            showResult(elementId, '<div class="loading">⏳ Loading...</div>');
+        }
+
+        async function testTopCharts() {
+            showLoading('charts-result');
+            try {
+                const response = await fetch(`${API_BASE}/api/top-charts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        country: 143441, // US
+                        genre: 36, // All
+                        chart: 27 // Top Free iPhone
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    let html = `<h3>✅ Success! Found ${data.apps.length} apps</h3>`;
+                    html += '<h4>Top 5 Apps:</h4><ul>';
+                    data.apps.slice(0, 5).forEach((app, i) => {
+                        html += `<li><strong>${i + 1}. ${app.name}</strong> by ${app.artistName} (${app.genre}) - ⭐ ${app.rating || 'N/A'}</li>`;
+                    });
+                    html += '</ul>';
+                    showResult('charts-result', html);
+                } else {
+                    showResult('charts-result', `❌ Error: ${data.error}`, true);
+                }
+            } catch (error) {
+                showResult('charts-result', `❌ Network Error: ${error.message}`, true);
+            }
+        }
+
+        async function testTopChartsGames() {
+            showLoading('charts-result');
+            try {
+                const response = await fetch(`${API_BASE}/api/top-charts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        country: 143443, // Germany
+                        genre: 6014, // Games
+                        chart: 27 // Top Free iPhone
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    let html = `<h3>✅ Success! Found ${data.apps.length} games</h3>`;
+                    html += '<h4>Top 5 Games:</h4><ul>';
+                    data.apps.slice(0, 5).forEach((app, i) => {
+                        html += `<li><strong>${i + 1}. ${app.name}</strong> by ${app.artistName} - ⭐ ${app.rating || 'N/A'}</li>`;
+                    });
+                    html += '</ul>';
+                    showResult('charts-result', html);
+                } else {
+                    showResult('charts-result', `❌ Error: ${data.error}`, true);
+                }
+            } catch (error) {
+                showResult('charts-result', `❌ Network Error: ${error.message}`, true);
+            }
+        }
+
+        async function testSearch() {
+            const searchTerm = document.getElementById('search-input').value;
+            if (!searchTerm) {
+                showResult('search-result', '❌ Please enter a search term', true);
+                return;
+            }
+
+            showLoading('search-result');
+            try {
+                const response = await fetch(`${API_BASE}/api/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        searchTerm: searchTerm,
+                        country: 'US',
+                        language: 'en-US'
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    let html = `<h3>✅ Success! Found ${data.apps.length} apps</h3>`;
+                    html += '<h4>Search Results:</h4><ul>';
+                    data.apps.slice(0, 5).forEach((app, i) => {
+                        html += `<li><strong>${app.name}</strong> by ${app.artistName} (${app.genre}) - ⭐ ${app.rating || 'N/A'}</li>`;
+                    });
+                    html += '</ul>';
+                    showResult('search-result', html);
+                } else {
+                    showResult('search-result', `❌ Error: ${data.error}`, true);
+                }
+            } catch (error) {
+                showResult('search-result', `❌ Network Error: ${error.message}`, true);
+            }
+        }
+
+        async function testAppDetails() {
+            const appId = document.getElementById('app-id-input').value;
+            if (!appId) {
+                showResult('details-result', '❌ Please enter an App ID', true);
+                return;
+            }
+
+            showLoading('details-result');
+            try {
+                const response = await fetch(`${API_BASE}/api/app-details`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        appId: parseInt(appId)
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    const app = data.app;
+                    let html = `<h3>✅ App Details Retrieved!</h3>`;
+                    html += `<h4>${app.name}</h4>`;
+                    html += `<p><strong>Developer:</strong> ${app.artistName}</p>`;
+                    html += `<p><strong>Genre:</strong> ${app.genre}</p>`;
+                    html += `<p><strong>Price:</strong> ${app.price === 0 ? 'Free' : '$' + app.price}</p>`;
+                    if (app.rating) {
+                        html += `<p><strong>Rating:</strong> ⭐ ${app.rating} (${app.ratingCount || 0} reviews)</p>`;
+                    }
+                    if (app.description) {
+                        html += `<p><strong>Description:</strong> ${app.description.substring(0, 200)}...</p>`;
+                    }
+                    showResult('details-result', html);
+                } else {
+                    showResult('details-result', `❌ Error: ${data.error}`, true);
+                }
+            } catch (error) {
+                showResult('details-result', `❌ Network Error: ${error.message}`, true);
+            }
+        }
+
+        async function testHealth() {
+            showLoading('health-result');
+            try {
+                const response = await fetch(`${API_BASE}/api/health`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = `<h3>✅ API is healthy!</h3>`;
+                    html += `<p><strong>Message:</strong> ${data.message}</p>`;
+                    html += `<p><strong>Version:</strong> ${data.version}</p>`;
+                    html += `<p><strong>Timestamp:</strong> ${new Date(data.timestamp).toLocaleString()}</p>`;
+                    showResult('health-result', html);
+                } else {
+                    showResult('health-result', `❌ Health check failed: ${data.error}`, true);
+                }
+            } catch (error) {
+                showResult('health-result', `❌ Network Error: ${error.message}`, true);
+            }
+        }
+
+        // Auto-run health check on page load
+        window.addEventListener('load', testHealth);
+    </script>
+</body>
+</html>

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parse-Tunes Project Showcase</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .code-block {
+            background: #1a1a1a;
+            color: #f8f8f2;
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Header -->
+    <header class="gradient-bg text-white">
+        <div class="container mx-auto px-6 py-12">
+            <div class="text-center">
+                <h1 class="text-5xl font-bold mb-4">
+                    <i class="fas fa-mobile-alt mr-4"></i>Parse-Tunes
+                </h1>
+                <p class="text-2xl mb-6 opacity-90">Apple App Store Data Explorer</p>
+                <p class="text-lg opacity-75 max-w-3xl mx-auto">
+                    A powerful TypeScript library for fetching and analyzing App Store data through undocumented iTunes APIs. 
+                    Now with a beautiful web interface for real-time exploration!
+                </p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-6">
+            <div class="flex justify-center space-x-8">
+                <a href="#overview" class="py-4 px-2 text-blue-600 border-b-2 border-blue-500 font-semibold">Overview</a>
+                <a href="#features" class="py-4 px-2 text-gray-500 hover:text-blue-600">Features</a>
+                <a href="#demo" class="py-4 px-2 text-gray-500 hover:text-blue-600">Live Demo</a>
+                <a href="#api" class="py-4 px-2 text-gray-500 hover:text-blue-600">API</a>
+                <a href="#code" class="py-4 px-2 text-gray-500 hover:text-blue-600">Code Examples</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8">
+        
+        <!-- Overview Section -->
+        <section id="overview" class="mb-16">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">Project Overview</h2>
+                <p class="text-xl text-gray-600 max-w-4xl mx-auto">
+                    Parse-Tunes is a comprehensive solution for accessing Apple App Store data, featuring both a powerful 
+                    TypeScript library and an intuitive web interface for data exploration and analysis.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-white rounded-lg shadow-lg p-6 card-hover">
+                    <div class="text-center">
+                        <i class="fas fa-code text-4xl text-blue-600 mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-3">TypeScript Library</h3>
+                        <p class="text-gray-600">
+                            Robust, type-safe library for programmatic access to App Store data with comprehensive API coverage.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6 card-hover">
+                    <div class="text-center">
+                        <i class="fas fa-globe text-4xl text-green-600 mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-3">Web Interface</h3>
+                        <p class="text-gray-600">
+                            Beautiful, responsive web application for interactive exploration of App Store trends and data.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6 card-hover">
+                    <div class="text-center">
+                        <i class="fas fa-chart-line text-4xl text-purple-600 mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-3">Real-time Data</h3>
+                        <p class="text-gray-600">
+                            Access live App Store rankings, search results, and detailed app information in real-time.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="mb-16">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">Key Features</h2>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div>
+                    <h3 class="text-2xl font-semibold mb-6 text-gray-800">
+                        <i class="fas fa-star text-yellow-500 mr-3"></i>Core Capabilities
+                    </h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mr-3 mt-1"></i>
+                            <div>
+                                <strong>Top Charts:</strong> Fetch top 200 apps across all categories and countries
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mr-3 mt-1"></i>
+                            <div>
+                                <strong>App Search:</strong> Search for apps by name, developer, or keywords
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mr-3 mt-1"></i>
+                            <div>
+                                <strong>Detailed Information:</strong> Get comprehensive app metadata including privacy labels
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mr-3 mt-1"></i>
+                            <div>
+                                <strong>Multi-platform:</strong> Support for iPhone, iPad, and other Apple platforms
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mr-3 mt-1"></i>
+                            <div>
+                                <strong>Global Coverage:</strong> Access data from App Stores worldwide
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="text-2xl font-semibold mb-6 text-gray-800">
+                        <i class="fas fa-cog text-blue-500 mr-3"></i>Technical Features
+                    </h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mr-3 mt-1"></i>
+                            <div>
+                                <strong>TypeScript:</strong> Full type safety and excellent developer experience
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mr-3 mt-1"></i>
+                            <div>
+                                <strong>RESTful API:</strong> Clean, well-documented API endpoints
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mr-3 mt-1"></i>
+                            <div>
+                                <strong>Error Handling:</strong> Robust error handling and recovery mechanisms
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mr-3 mt-1"></i>
+                            <div>
+                                <strong>Cross-platform:</strong> Works on Node.js and modern browsers
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mr-3 mt-1"></i>
+                            <div>
+                                <strong>MIT License:</strong> Open source and free to use
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Demo Section -->
+        <section id="demo" class="mb-16">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">Live Demo</h2>
+                <p class="text-xl text-gray-600">Experience the power of Parse-Tunes with our interactive demos</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white rounded-lg shadow-lg p-6 card-hover">
+                    <div class="text-center mb-6">
+                        <i class="fas fa-desktop text-4xl text-blue-600 mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-3">Full Web Application</h3>
+                        <p class="text-gray-600 mb-4">
+                            Complete web interface with all features, beautiful UI, and real-time data visualization.
+                        </p>
+                        <a href="/" target="_blank" 
+                           class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200">
+                            <i class="fas fa-external-link-alt mr-2"></i>Open Full Demo
+                        </a>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6 card-hover">
+                    <div class="text-center mb-6">
+                        <i class="fas fa-flask text-4xl text-green-600 mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-3">API Test Interface</h3>
+                        <p class="text-gray-600 mb-4">
+                            Simple interface to test individual API endpoints and see raw responses.
+                        </p>
+                        <a href="/test.html" target="_blank" 
+                           class="inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200">
+                            <i class="fas fa-external-link-alt mr-2"></i>Open API Tester
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- API Section -->
+        <section id="api" class="mb-16">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">API Endpoints</h2>
+                <p class="text-xl text-gray-600">RESTful API for programmatic access to App Store data</p>
+            </div>
+
+            <div class="space-y-6">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-mono mr-3">POST</span>
+                        /api/top-charts
+                    </h3>
+                    <p class="text-gray-600 mb-4">Fetch top app charts by country, genre, and chart type.</p>
+                    <div class="code-block">
+                        <pre>{
+  "country": 143441,  // US
+  "genre": 36,        // All categories
+  "chart": 27         // Top Free iPhone
+}</pre>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-mono mr-3">POST</span>
+                        /api/search
+                    </h3>
+                    <p class="text-gray-600 mb-4">Search for apps by term, country, and language.</p>
+                    <div class="code-block">
+                        <pre>{
+  "searchTerm": "calculator",
+  "country": "US",
+  "language": "en-US"
+}</pre>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">
+                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm font-mono mr-3">POST</span>
+                        /api/app-details
+                    </h3>
+                    <p class="text-gray-600 mb-4">Get detailed information about a specific app.</p>
+                    <div class="code-block">
+                        <pre>{
+  "appId": 284882215  // Facebook app ID
+}</pre>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">
+                        <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-sm font-mono mr-3">GET</span>
+                        /api/health
+                    </h3>
+                    <p class="text-gray-600">Check API health and status.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Code Examples Section -->
+        <section id="code" class="mb-16">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">Code Examples</h2>
+                <p class="text-xl text-gray-600">Get started with Parse-Tunes in minutes</p>
+            </div>
+
+            <div class="space-y-8">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">
+                        <i class="fas fa-trophy mr-2 text-yellow-500"></i>Fetch Top Charts
+                    </h3>
+                    <div class="code-block">
+                        <pre>import { fetchTopApps, countries, genres, charts } from 'parse-tunes';
+
+const topApps = await fetchTopApps({
+    genre: genres.all,
+    chart: charts.topFreeIphone,
+    country: countries.US
+});
+
+console.log(`Found ${topApps.length} apps`);
+console.log('Top 5:', topApps.slice(0, 5));</pre>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">
+                        <i class="fas fa-search mr-2 text-green-500"></i>Search Apps
+                    </h3>
+                    <div class="code-block">
+                        <pre>import { searchApps } from 'parse-tunes';
+
+const results = await searchApps({
+    searchTerm: 'calculator',
+    country: 'US',
+    language: 'en-US'
+});
+
+results.forEach(app => {
+    console.log(`${app.name} by ${app.artistName}`);
+});</pre>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">
+                        <i class="fas fa-info-circle mr-2 text-purple-500"></i>Get App Details
+                    </h3>
+                    <div class="code-block">
+                        <pre>import { fetchAppDetails } from 'parse-tunes';
+
+const appDetails = await fetchAppDetails({
+    appId: 284882215, // Facebook
+    platforms: ['iphone'],
+    attributes: ['name', 'artistName', 'description', 'userRating'],
+    country: 'US',
+    language: 'en-US'
+});
+
+console.log(`${appDetails.name} by ${appDetails.artistName}`);
+console.log(`Rating: ${appDetails.userRating.value}/5`);</pre>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">
+                        <i class="fas fa-server mr-2 text-blue-500"></i>Using the Web API
+                    </h3>
+                    <div class="code-block">
+                        <pre>// Fetch top charts via HTTP API
+const response = await fetch('http://localhost:8787/api/top-charts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        country: 143441, // US
+        genre: 36,       // All categories  
+        chart: 27        // Top Free iPhone
+    })
+});
+
+const data = await response.json();
+console.log(`Found ${data.apps.length} apps`);</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="mb-16">
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white p-8">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold mb-4">Project Statistics</h2>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                    <div>
+                        <div class="text-3xl font-bold mb-2">200+</div>
+                        <div class="text-sm opacity-75">Countries Supported</div>
+                    </div>
+                    <div>
+                        <div class="text-3xl font-bold mb-2">25+</div>
+                        <div class="text-sm opacity-75">App Categories</div>
+                    </div>
+                    <div>
+                        <div class="text-3xl font-bold mb-2">6</div>
+                        <div class="text-sm opacity-75">Chart Types</div>
+                    </div>
+                    <div>
+                        <div class="text-3xl font-bold mb-2">∞</div>
+                        <div class="text-sm opacity-75">Apps Accessible</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Getting Started Section -->
+        <section class="mb-16">
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-4">Getting Started</h2>
+                    <p class="text-xl text-gray-600">Start exploring App Store data in minutes</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="text-center">
+                        <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl font-bold text-blue-600">1</span>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Install</h3>
+                        <div class="code-block text-left">
+                            <pre>npm install parse-tunes</pre>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl font-bold text-green-600">2</span>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Import</h3>
+                        <div class="code-block text-left">
+                            <pre>import { fetchTopApps } from 'parse-tunes'</pre>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <div class="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl font-bold text-purple-600">3</span>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Use</h3>
+                        <div class="code-block text-left">
+                            <pre>const apps = await fetchTopApps({...})</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">Parse-Tunes</h3>
+                    <p class="text-gray-400">
+                        Powerful Apple App Store data exploration made simple. Built with TypeScript and modern web technologies.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">Quick Links</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="/" class="hover:text-white">Full Demo</a></li>
+                        <li><a href="/test.html" class="hover:text-white">API Tester</a></li>
+                        <li><a href="/api/health" class="hover:text-white">API Health</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">Resources</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white">Documentation</a></li>
+                        <li><a href="#" class="hover:text-white">GitHub Repository</a></li>
+                        <li><a href="#" class="hover:text-white">Issues & Support</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2026 Parse-Tunes Project. Built with ❤️ for the developer community.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Update active navigation item on scroll
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('nav a[href^="#"]');
+            
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (scrollY >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('text-blue-600', 'border-blue-500');
+                link.classList.add('text-gray-500');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.remove('text-gray-500');
+                    link.classList.add('text-blue-600', 'border-b-2', 'border-blue-500');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

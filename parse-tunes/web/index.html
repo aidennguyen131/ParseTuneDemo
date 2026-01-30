@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parse-Tunes Web Demo</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .loading {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-6 py-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-4xl font-bold mb-2">
+                        <i class="fas fa-mobile-alt mr-3"></i>Parse-Tunes
+                    </h1>
+                    <p class="text-xl opacity-90">Apple App Store Data Explorer</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm opacity-75">Powered by</div>
+                    <div class="text-lg font-semibold">iTunes API</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-6">
+            <div class="flex space-x-8 overflow-x-auto">
+                <button onclick="showSection('top-charts')" class="nav-btn py-4 px-2 border-b-2 border-blue-500 text-blue-600 font-semibold whitespace-nowrap">
+                    <i class="fas fa-chart-line mr-2"></i>Top Charts (Legacy)
+                </button>
+                <button onclick="showSection('charts-v2')" class="nav-btn py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-blue-600 whitespace-nowrap">
+                    <i class="fas fa-rocket mr-2"></i>Charts V2 <span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-1">NEW</span>
+                </button>
+                <button onclick="showSection('app-search')" class="nav-btn py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-blue-600 whitespace-nowrap">
+                    <i class="fas fa-search mr-2"></i>App Search
+                </button>
+                <button onclick="showSection('app-details')" class="nav-btn py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-blue-600 whitespace-nowrap">
+                    <i class="fas fa-info-circle mr-2"></i>App Details
+                </button>
+                <button onclick="showSection('analytics')" class="nav-btn py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-blue-600 whitespace-nowrap">
+                    <i class="fas fa-chart-bar mr-2"></i>Analytics
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8">
+        <!-- Top Charts Section -->
+        <section id="top-charts" class="section">
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">
+                    <i class="fas fa-trophy mr-3 text-yellow-500"></i>Top Charts
+                </h2>
+                
+                <!-- Filters -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                        <select id="country-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="143441">🇺🇸 United States</option>
+                            <option value="143443">🇩🇪 Germany</option>
+                            <option value="143444">🇬🇧 United Kingdom</option>
+                            <option value="143471">🇻🇳 Vietnam</option>
+                            <option value="143462">🇯🇵 Japan</option>
+                            <option value="143466">🇰🇷 South Korea</option>
+                            <option value="143465">🇨🇳 China</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Genre</label>
+                        <select id="genre-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="36">All Categories</option>
+                            <option value="6014">🎮 Games</option>
+                            <option value="6017">📚 Education</option>
+                            <option value="6002">🔧 Utilities</option>
+                            <option value="6013">💪 Health & Fitness</option>
+                            <option value="6008">📸 Photo & Video</option>
+                            <option value="6016">🎬 Entertainment</option>
+                            <option value="6015">💰 Finance</option>
+                            <option value="6007">📊 Productivity</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Chart Type</label>
+                        <select id="chart-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="27">📱 Top Free iPhone</option>
+                            <option value="30">💎 Top Paid iPhone</option>
+                            <option value="38">💰 Top Grossing iPhone</option>
+                            <option value="44">📱 Top Free iPad</option>
+                            <option value="45">💎 Top Paid iPad</option>
+                            <option value="46">💰 Top Grossing iPad</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="fetchTopCharts()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200">
+                            <i class="fas fa-download mr-2"></i>Fetch Charts
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div id="charts-loading" class="hidden text-center py-8">
+                    <i class="fas fa-spinner loading text-4xl text-blue-600"></i>
+                    <p class="mt-4 text-gray-600">Fetching top charts...</p>
+                </div>
+
+                <div id="charts-results" class="hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Results</h3>
+                        <span id="charts-count" class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"></span>
+                    </div>
+                    <div id="charts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                    
+                    <!-- Load More Button -->
+                    <div id="charts-load-more" class="hidden text-center mt-6">
+                        <button onclick="loadMoreCharts()" id="charts-load-more-btn" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition duration-200 inline-flex items-center">
+                            <i class="fas fa-plus mr-2"></i>Load More Apps
+                        </button>
+                        <div id="charts-load-more-loading" class="hidden mt-4">
+                            <i class="fas fa-spinner loading text-2xl text-blue-600"></i>
+                            <p class="mt-2 text-gray-600">Loading more apps...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts V2 Section -->
+        <section id="charts-v2" class="section hidden">
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">
+                        <i class="fas fa-rocket mr-3 text-orange-500"></i>Charts V2 API
+                        <span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2">NEW</span>
+                    </h2>
+                    <div class="text-sm text-gray-600 bg-orange-50 px-3 py-1 rounded-lg">
+                        <i class="fas fa-star text-orange-500 mr-1"></i>
+                        Newly Discovered MZStoreServices API
+                    </div>
+                </div>
+                
+                <!-- Chart Type Selection -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Chart Type</label>
+                    <div id="chart-types-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        <!-- Chart types will be loaded dynamically -->
+                        <div class="text-center py-4">
+                            <i class="fas fa-spinner loading text-2xl text-orange-600"></i>
+                            <p class="text-sm text-gray-600 mt-2">Loading chart types...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                        <select id="v2-country-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                            <option value="us">🇺🇸 United States</option>
+                            <option value="de">🇩🇪 Germany</option>
+                            <option value="gb">🇬🇧 United Kingdom</option>
+                            <option value="vn">🇻🇳 Vietnam</option>
+                            <option value="jp">🇯🇵 Japan</option>
+                            <option value="kr">🇰🇷 South Korea</option>
+                            <option value="cn">🇨🇳 China</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Genre</label>
+                        <select id="v2-genre-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                            <option value="36">All Categories</option>
+                            <option value="6014">🎮 Games</option>
+                            <option value="6017">📚 Education</option>
+                            <option value="6002">🔧 Utilities</option>
+                            <option value="6013">💪 Health & Fitness</option>
+                            <option value="6008">📸 Photo & Video</option>
+                            <option value="6016">🎬 Entertainment</option>
+                            <option value="6015">💰 Finance</option>
+                            <option value="6007">📊 Productivity</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Limit</label>
+                        <select id="v2-limit-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                            <option value="10">10 apps</option>
+                            <option value="25" selected>25 apps</option>
+                            <option value="50">50 apps</option>
+                            <option value="100">100 apps</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="fetchChartsV2()" id="fetch-v2-btn" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-rocket mr-2"></i>Fetch Charts V2
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Selected Chart Info -->
+                <div id="selected-chart-info" class="hidden mb-6 p-4 bg-orange-50 rounded-lg border border-orange-200">
+                    <div class="flex items-center">
+                        <i class="fas fa-info-circle text-orange-600 mr-2"></i>
+                        <span class="font-medium text-orange-800">Selected Chart:</span>
+                        <span id="selected-chart-name" class="ml-2 text-orange-700"></span>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div id="v2-charts-loading" class="hidden text-center py-8">
+                    <i class="fas fa-spinner loading text-4xl text-orange-600"></i>
+                    <p class="mt-4 text-gray-600">Fetching charts from new API...</p>
+                    <p class="text-sm text-gray-500 mt-2">This may take a few seconds to enrich app data</p>
+                </div>
+
+                <div id="v2-charts-results" class="hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Results</h3>
+                        <div class="flex items-center space-x-4">
+                            <span id="v2-charts-count" class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium"></span>
+                            <div id="v2-pagination-info" class="text-sm text-gray-600"></div>
+                        </div>
+                    </div>
+                    <div id="v2-charts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                    
+                    <!-- Load More Button -->
+                    <div id="v2-charts-load-more" class="hidden text-center mt-6">
+                        <button onclick="loadMoreChartsV2()" id="v2-charts-load-more-btn" 
+                                class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-8 rounded-lg transition duration-200 inline-flex items-center">
+                            <i class="fas fa-plus mr-2"></i>Load More Apps
+                        </button>
+                        <div id="v2-charts-load-more-loading" class="hidden mt-4">
+                            <i class="fas fa-spinner loading text-2xl text-orange-600"></i>
+                            <p class="mt-2 text-gray-600">Loading more apps...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- API Info -->
+                <div class="mt-8 p-4 bg-gray-50 rounded-lg">
+                    <h4 class="font-semibold text-gray-800 mb-2">
+                        <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>About Charts V2 API
+                    </h4>
+                    <p class="text-sm text-gray-600 mb-2">
+                        This new API uses the recently discovered iTunes MZStoreServices endpoint that provides access to 12+ different chart types with up to 200 results per chart.
+                    </p>
+                    <div class="text-xs text-gray-500">
+                        <strong>Endpoint:</strong> <code class="bg-gray-200 px-1 rounded">https://itunes.apple.com/WebObjects/MZStoreServices.woa/ws/charts</code>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- App Search Section -->
+        <section id="app-search" class="section hidden">
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">
+                    <i class="fas fa-search mr-3 text-green-500"></i>App Search
+                </h2>
+                
+                <!-- Search Form -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Search Term</label>
+                        <input type="text" id="search-term" placeholder="Enter app name, developer, or keyword..." 
+                               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="searchApps()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200">
+                            <i class="fas fa-search mr-2"></i>Search Apps
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search Results -->
+                <div id="search-loading" class="hidden text-center py-8">
+                    <i class="fas fa-spinner loading text-4xl text-green-600"></i>
+                    <p class="mt-4 text-gray-600">Searching apps...</p>
+                </div>
+
+                <div id="search-results" class="hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Search Results</h3>
+                        <span id="search-count" class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium"></span>
+                    </div>
+                    <div id="search-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                    
+                    <!-- Load More Button -->
+                    <div id="search-load-more" class="hidden text-center mt-6">
+                        <button onclick="loadMoreSearch()" id="search-load-more-btn" 
+                                class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg transition duration-200 inline-flex items-center">
+                            <i class="fas fa-plus mr-2"></i>Load More Results
+                        </button>
+                        <div id="search-load-more-loading" class="hidden mt-4">
+                            <i class="fas fa-spinner loading text-2xl text-green-600"></i>
+                            <p class="mt-2 text-gray-600">Loading more results...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- App Details Section -->
+        <section id="app-details" class="section hidden">
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">
+                    <i class="fas fa-info-circle mr-3 text-purple-500"></i>App Details
+                </h2>
+                
+                <!-- App ID Form -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">App ID</label>
+                        <input type="text" id="app-id" placeholder="Enter App ID (e.g., 284882215 for Facebook)" 
+                               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        <p class="text-sm text-gray-500 mt-1">You can find App IDs from the Top Charts or Search results</p>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="fetchAppDetails()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200">
+                            <i class="fas fa-info mr-2"></i>Get Details
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Popular App IDs for testing -->
+                <div class="mb-6">
+                    <p class="text-sm font-medium text-gray-700 mb-2">Popular App IDs for testing:</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="document.getElementById('app-id').value='284882215'" class="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-sm">Facebook (284882215)</button>
+                        <button onclick="document.getElementById('app-id').value='389801252'" class="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-sm">Instagram (389801252)</button>
+                        <button onclick="document.getElementById('app-id').value='6448311069'" class="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-sm">ChatGPT (6448311069)</button>
+                        <button onclick="document.getElementById('app-id').value='1673567402'" class="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-sm">Threads (1673567402)</button>
+                    </div>
+                </div>
+
+                <!-- App Details Results -->
+                <div id="details-loading" class="hidden text-center py-8">
+                    <i class="fas fa-spinner loading text-4xl text-purple-600"></i>
+                    <p class="mt-4 text-gray-600">Fetching app details...</p>
+                </div>
+
+                <div id="details-results" class="hidden">
+                    <div id="app-info" class="bg-gray-50 rounded-lg p-6"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics Section -->
+        <section id="analytics" class="section hidden">
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">
+                    <i class="fas fa-chart-bar mr-3 text-red-500"></i>Analytics Dashboard
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-blue-50 rounded-lg p-6 text-center">
+                        <i class="fas fa-mobile-alt text-3xl text-blue-600 mb-2"></i>
+                        <h3 class="text-lg font-semibold text-gray-800">Total Apps Fetched</h3>
+                        <p id="total-apps" class="text-2xl font-bold text-blue-600">0</p>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-6 text-center">
+                        <i class="fas fa-search text-3xl text-green-600 mb-2"></i>
+                        <h3 class="text-lg font-semibold text-gray-800">Searches Performed</h3>
+                        <p id="total-searches" class="text-2xl font-bold text-green-600">0</p>
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-6 text-center">
+                        <i class="fas fa-info-circle text-3xl text-purple-600 mb-2"></i>
+                        <h3 class="text-lg font-semibold text-gray-800">Details Viewed</h3>
+                        <p id="total-details" class="text-2xl font-bold text-purple-600">0</p>
+                    </div>
+                    <div class="bg-yellow-50 rounded-lg p-6 text-center">
+                        <i class="fas fa-globe text-3xl text-yellow-600 mb-2"></i>
+                        <h3 class="text-lg font-semibold text-gray-800">Countries Explored</h3>
+                        <p id="countries-explored" class="text-2xl font-bold text-yellow-600">0</p>
+                    </div>
+                </div>
+
+                <!-- Feature Overview -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                            <i class="fas fa-star mr-2 text-yellow-500"></i>Key Features
+                        </h3>
+                        <ul class="space-y-2 text-gray-600">
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>Real-time App Store data</li>
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>Multiple countries & regions</li>
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>All app categories</li>
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>Free, Paid & Grossing charts</li>
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>Detailed app information</li>
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>Search functionality</li>
+                        </ul>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                            <i class="fas fa-code mr-2 text-blue-500"></i>Technical Info
+                        </h3>
+                        <ul class="space-y-2 text-gray-600">
+                            <li><i class="fas fa-cog text-blue-500 mr-2"></i>Built with TypeScript</li>
+                            <li><i class="fas fa-cog text-blue-500 mr-2"></i>Uses iTunes API</li>
+                            <li><i class="fas fa-cog text-blue-500 mr-2"></i>Cross-platform compatible</li>
+                            <li><i class="fas fa-cog text-blue-500 mr-2"></i>MIT License</li>
+                            <li><i class="fas fa-cog text-blue-500 mr-2"></i>Open source</li>
+                            <li><i class="fas fa-cog text-blue-500 mr-2"></i>Well documented</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-6 text-center">
+            <p class="mb-2">&copy; 2026 Parse-Tunes Demo. Built with ❤️ for App Store data exploration.</p>
+            <p class="text-gray-400 text-sm">This is a demonstration of the parse-tunes library capabilities.</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
