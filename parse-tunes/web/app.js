@@ -1,19 +1,19 @@
 // Parse-Tunes Web Demo Application
 class ParseTunesDemo {
     constructor() {
-        this.baseURL = 'http://localhost:8787';
+        this.baseURL = ''; // Relative path for production
         this.stats = {
             totalApps: 0,
             totalSearches: 0,
             totalDetails: 0,
             countriesExplored: new Set()
         };
-        
+
         // Pagination state
         this.pagination = {
             charts: {
                 offset: 0,
-                limit: 20,
+                limit: 200,
                 hasMore: false,
                 currentParams: null
             },
@@ -30,13 +30,13 @@ class ParseTunesDemo {
                 currentParams: null
             }
         };
-        
+
         // Charts V2 state
         this.chartsV2 = {
             availableTypes: [],
             selectedType: null
         };
-        
+
         this.init();
     }
 
@@ -60,16 +60,16 @@ class ParseTunesDemo {
         document.querySelectorAll('.section').forEach(section => {
             section.classList.add('hidden');
         });
-        
+
         // Show selected section
         document.getElementById(sectionId).classList.remove('hidden');
-        
+
         // Update navigation
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.classList.remove('border-blue-500', 'text-blue-600');
             btn.classList.add('border-transparent', 'text-gray-500');
         });
-        
+
         if (targetElement) {
             targetElement.classList.remove('border-transparent', 'text-gray-500');
             targetElement.classList.add('border-blue-500', 'text-blue-600');
@@ -118,11 +118,11 @@ class ParseTunesDemo {
 
             const data = await response.json();
             this.displayTopCharts(data, loadMore);
-            
+
             // Update pagination state
             this.pagination.charts.hasMore = data.pagination ? data.pagination.hasMore : false;
             this.pagination.charts.offset = data.pagination ? (data.pagination.nextOffset || this.pagination.charts.offset) : this.pagination.charts.offset;
-            
+
             // Update stats
             this.stats.totalApps += data.apps.length;
             this.stats.countriesExplored.add(country);
@@ -150,7 +150,7 @@ class ParseTunesDemo {
         const totalShowing = currentCount + data.apps.length;
         const totalAvailable = data.pagination ? data.pagination.totalAvailable : (data.total || data.apps.length);
         countSpan.textContent = `${totalShowing} of ${totalAvailable} apps`;
-        
+
         // Clear grid if not appending
         if (!append) {
             gridDiv.innerHTML = '';
@@ -159,7 +159,7 @@ class ParseTunesDemo {
         // Check if we need to fetch SensorTower data for apps 195-200
         const currentOffset = data.pagination ? data.pagination.offset : 0;
         const appsWithSensorTower = [...data.apps];
-        
+
         // If we're showing apps in the 195-200 range, fetch SensorTower data
         const appsInRange = data.apps.filter((app, index) => {
             const globalRank = currentOffset + index + 1;
@@ -168,7 +168,7 @@ class ParseTunesDemo {
 
         if (appsInRange.length > 0) {
             console.log(`Fetching SensorTower data for ${appsInRange.length} apps in range 195-200`);
-            
+
             // Show loading indicator for SensorTower data
             const sensorTowerLoadingDiv = document.createElement('div');
             sensorTowerLoadingDiv.className = 'text-center py-4 bg-purple-50 rounded-lg mb-4';
@@ -183,9 +183,9 @@ class ParseTunesDemo {
             const appIds = appsInRange.map(app => app.id);
             const countrySelect = document.getElementById('country-select');
             const countryCode = countrySelect.options[countrySelect.selectedIndex].text.match(/🇺🇸|🇩🇪|🇬🇧|🇻🇳|🇯🇵|🇰🇷|🇨🇳/);
-            const countryMap = {'🇺🇸': 'US', '🇩🇪': 'DE', '🇬🇧': 'GB', '🇻🇳': 'VN', '🇯🇵': 'JP', '🇰🇷': 'KR', '🇨🇳': 'CN'};
+            const countryMap = { '🇺🇸': 'US', '🇩🇪': 'DE', '🇬🇧': 'GB', '🇻🇳': 'VN', '🇯🇵': 'JP', '🇰🇷': 'KR', '🇨🇳': 'CN' };
             const country = countryMap[countryCode?.[0]] || 'US';
-            
+
             const sensorTowerData = await this.fetchSensorTowerData(appIds, country);
 
             // Attach SensorTower data to apps
@@ -201,7 +201,7 @@ class ParseTunesDemo {
                 sensorTowerLoadingDiv.remove();
             }
         }
-        
+
         const appsHTML = appsWithSensorTower.map(app => this.createAppCard(app, 'blue')).join('');
         gridDiv.innerHTML += appsHTML;
 
@@ -218,7 +218,7 @@ class ParseTunesDemo {
     // Search apps
     async searchApps(loadMore = false) {
         const searchTerm = document.getElementById('search-term').value.trim();
-        
+
         if (!searchTerm && !loadMore) {
             alert('Please enter a search term');
             return;
@@ -260,11 +260,11 @@ class ParseTunesDemo {
 
             const data = await response.json();
             this.displaySearchResults(data, loadMore);
-            
+
             // Update pagination state
             this.pagination.search.hasMore = data.pagination ? data.pagination.hasMore : false;
             this.pagination.search.offset = data.pagination ? (data.pagination.nextOffset || this.pagination.search.offset) : this.pagination.search.offset;
-            
+
             // Update stats
             if (!loadMore) {
                 this.stats.totalSearches++;
@@ -292,12 +292,12 @@ class ParseTunesDemo {
         const currentCount = append ? gridDiv.children.length : 0;
         const totalShowing = currentCount + data.apps.length;
         countSpan.textContent = `${totalShowing} of ${data.pagination.total} results`;
-        
+
         // Clear grid if not appending
         if (!append) {
             gridDiv.innerHTML = '';
         }
-        
+
         const appsHTML = data.apps.map(app => this.createAppCard(app, 'green')).join('');
         gridDiv.innerHTML += appsHTML;
 
@@ -314,7 +314,7 @@ class ParseTunesDemo {
     // Fetch app details
     async fetchAppDetails() {
         const appId = document.getElementById('app-id').value.trim();
-        
+
         if (!appId) {
             alert('Please enter an App ID');
             return;
@@ -344,7 +344,7 @@ class ParseTunesDemo {
 
             const data = await response.json();
             this.displayAppDetails(data);
-            
+
             // Update stats
             this.stats.totalDetails++;
             this.updateStats();
@@ -375,7 +375,7 @@ class ParseTunesDemo {
         const infoDiv = document.getElementById('app-info');
 
         const app = data.app;
-        
+
         infoDiv.innerHTML = `
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="lg:col-span-2">
@@ -450,7 +450,7 @@ class ParseTunesDemo {
         const fullStars = Math.floor(rating);
         const hasHalfStar = rating % 1 >= 0.5;
         const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-        
+
         let stars = '';
         for (let i = 0; i < fullStars; i++) {
             stars += '<i class="fas fa-star"></i>';
@@ -461,7 +461,7 @@ class ParseTunesDemo {
         for (let i = 0; i < emptyStars; i++) {
             stars += '<i class="far fa-star"></i>';
         }
-        
+
         return stars;
     }
 
@@ -481,9 +481,9 @@ class ParseTunesDemo {
                 rank: 'text-orange-600'
             }
         };
-        
+
         const colors = themeColors[colorTheme] || themeColors.blue;
-        
+
         // SensorTower data section
         const sensorTowerSection = app.sensorTower ? `
             <div class="mt-3 p-2 bg-purple-50 rounded-lg border border-purple-200">
@@ -504,7 +504,7 @@ class ParseTunesDemo {
                 ${app.sensorTower.error ? `<div class="text-xs text-red-600 mt-1">⚠️ ${app.sensorTower.error}</div>` : ''}
             </div>
         ` : '';
-        
+
         return `
             <div class="bg-gray-50 rounded-lg p-4 card-hover fade-in">
                 <div class="flex items-start justify-between mb-3">
@@ -552,9 +552,9 @@ class ParseTunesDemo {
     formatNumber(num) {
         if (num === null || num === undefined) return 'N/A';
         if (num === 0) return '0';
-        
+
         const absNum = Math.abs(num);
-        
+
         if (absNum >= 1000000000) {
             return (num / 1000000000).toFixed(1) + 'B';
         } else if (absNum >= 1000000) {
@@ -613,7 +613,7 @@ class ParseTunesDemo {
             </div>
         `;
         document.body.appendChild(errorDiv);
-        
+
         // Auto remove after 5 seconds
         setTimeout(() => {
             if (errorDiv.parentElement) {
@@ -627,7 +627,7 @@ class ParseTunesDemo {
         try {
             const response = await fetch(`${this.baseURL}/api/chart-types`);
             const data = await response.json();
-            
+
             if (data.success) {
                 this.chartsV2.availableTypes = data.chartTypes;
                 this.renderChartTypes();
@@ -644,7 +644,7 @@ class ParseTunesDemo {
     // Render chart types grid
     renderChartTypes() {
         const grid = document.getElementById('chart-types-grid');
-        
+
         const chartTypeIcons = {
             'FreeAppsV2': 'fas fa-download',
             'PaidApplications': 'fas fa-dollar-sign',
@@ -659,18 +659,17 @@ class ParseTunesDemo {
             'FreeMacAppsV2': 'fas fa-laptop',
             'Applications': 'fas fa-th-large'
         };
-        
+
         grid.innerHTML = this.chartsV2.availableTypes.map(chartType => {
             const icon = chartTypeIcons[chartType.name] || 'fas fa-mobile-alt';
             const isSelected = this.chartsV2.selectedType === chartType.name;
-            
+
             return `
                 <button onclick="demo.selectChartType('${chartType.name}')" 
-                        class="chart-type-btn p-4 border-2 rounded-lg transition-all duration-200 text-left hover:shadow-md ${
-                            isSelected 
-                                ? 'border-orange-500 bg-orange-50 text-orange-700' 
-                                : 'border-gray-200 hover:border-orange-300'
-                        }">
+                        class="chart-type-btn p-4 border-2 rounded-lg transition-all duration-200 text-left hover:shadow-md ${isSelected
+                    ? 'border-orange-500 bg-orange-50 text-orange-700'
+                    : 'border-gray-200 hover:border-orange-300'
+                }">
                     <div class="flex items-center mb-2">
                         <i class="${icon} text-lg ${isSelected ? 'text-orange-600' : 'text-gray-600'}"></i>
                         <span class="ml-2 font-medium text-sm">${chartType.displayName}</span>
@@ -700,17 +699,17 @@ class ParseTunesDemo {
     selectChartType(chartTypeName) {
         this.chartsV2.selectedType = chartTypeName;
         this.renderChartTypes();
-        
+
         // Show selected chart info
         const selectedInfo = document.getElementById('selected-chart-info');
         const selectedName = document.getElementById('selected-chart-name');
-        
+
         const chartType = this.chartsV2.availableTypes.find(ct => ct.name === chartTypeName);
         if (chartType) {
             selectedName.textContent = chartType.displayName;
             selectedInfo.classList.remove('hidden');
         }
-        
+
         // Enable fetch button
         document.getElementById('fetch-v2-btn').disabled = false;
     }
@@ -730,9 +729,9 @@ class ParseTunesDemo {
         if (!loadMore) {
             this.pagination.chartsV2.offset = 0;
             this.pagination.chartsV2.limit = limit;
-            this.pagination.chartsV2.currentParams = { 
-                chartType: this.chartsV2.selectedType, 
-                country, 
+            this.pagination.chartsV2.currentParams = {
+                chartType: this.chartsV2.selectedType,
+                country,
                 genre: parseInt(genre)
             };
         }
@@ -769,7 +768,7 @@ class ParseTunesDemo {
                 this.stats.totalApps += data.apps.length;
                 this.stats.countriesExplored.add(country);
                 this.updateStats();
-                
+
                 // Update pagination
                 this.pagination.chartsV2.hasMore = data.pagination.hasMore;
                 if (loadMore) {
@@ -783,7 +782,7 @@ class ParseTunesDemo {
         } catch (error) {
             console.error('Error fetching charts V2:', error);
             this.showError(`Failed to fetch charts: ${error.message}`);
-            
+
             // Hide loading
             document.getElementById('v2-charts-loading').classList.add('hidden');
             document.getElementById('v2-charts-load-more-loading').classList.add('hidden');
@@ -821,7 +820,7 @@ class ParseTunesDemo {
         // Check if we need to fetch SensorTower data for apps 195-200
         const currentOffset = data.pagination.offset;
         const appsWithSensorTower = [...data.apps];
-        
+
         // If we're showing apps in the 195-200 range, fetch SensorTower data
         const appsInRange = data.apps.filter((app, index) => {
             const globalRank = currentOffset + index + 1;
@@ -830,7 +829,7 @@ class ParseTunesDemo {
 
         if (appsInRange.length > 0) {
             console.log(`Fetching SensorTower data for ${appsInRange.length} apps in range 195-200`);
-            
+
             // Show loading indicator for SensorTower data
             const sensorTowerLoadingDiv = document.createElement('div');
             sensorTowerLoadingDiv.className = 'text-center py-4 bg-purple-50 rounded-lg mb-4';
@@ -862,7 +861,7 @@ class ParseTunesDemo {
 
         // Add apps to grid
         const appsHTML = appsWithSensorTower.map(app => this.createAppCard(app, 'orange')).join('');
-        
+
         if (loadMore) {
             gridDiv.innerHTML += appsHTML;
         } else {
@@ -878,7 +877,7 @@ class ParseTunesDemo {
 
         // Show results
         resultsDiv.classList.remove('hidden');
-        
+
         // Add fade-in animation
         if (!loadMore) {
             resultsDiv.classList.add('fade-in');
@@ -924,14 +923,14 @@ function loadMoreChartsV2() {
 const demo = new ParseTunesDemo();
 
 // Handle Enter key for search
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('search-term').addEventListener('keypress', function(e) {
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('search-term').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             searchApps();
         }
     });
-    
-    document.getElementById('app-id').addEventListener('keypress', function(e) {
+
+    document.getElementById('app-id').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             fetchAppDetails();
         }
