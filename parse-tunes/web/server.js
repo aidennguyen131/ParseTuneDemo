@@ -484,6 +484,83 @@ app.post('/api/app-details', async (req, res) => {
     }
 });
 
+// Helper function to fetch SensorTower data
+async function fetchSensorTowerData(appId, country = 'US') {
+    try {
+        const url = `https://app.sensortower.com/api/ios/apps/${appId}?country=${country}`;
+        
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`SensorTower API error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Extract the data we need
+        return {
+            downloads: data.worldwide_last_month_downloads?.value || null,
+            revenue: data.worldwide_last_month_revenue?.value || null,
+            revenueUnit: data.worldwide_last_month_revenue?.currency || 'USD'
+        };
+        
+    } catch (error) {
+        console.error(`Error fetching SensorTower data for app ${appId}:`, error);
+        return {
+            downloads: null,
+            revenue: null,
+            revenueUnit: 'USD',
+            error: error.message
+        };
+    }
+}
+
+// Get SensorTower data for specific apps
+app.post('/api/sensortower-data', async (req, res) => {
+    try {
+        const { appIds, country = 'US' } = req.body;
+        
+        if (!appIds || !Array.isArray(appIds)) {
+            return res.status(400).json({
+                success: false,
+                error: 'appIds array is required'
+            });
+        }
+        
+        console.log(`Fetching SensorTower data for ${appIds.length} apps`);
+        
+        // Fetch SensorTower data for each app
+        const sensorTowerPromises = appIds.map(async (appId) => {
+            const sensorTowerData = await fetchSensorTowerData(appId, country);
+            return {
+                appId: appId,
+                ...sensorTowerData
+            };
+        });
+        
+        // Wait for all requests to complete
+        const sensorTowerResults = await Promise.all(sensorTowerPromises);
+        
+        // Create a map for easy lookup
+        const sensorTowerMap = {};
+        sensorTowerResults.forEach(result => {
+            sensorTowerMap[result.appId] = result;
+        });
+        
+        res.json({
+            success: true,
+            data: sensorTowerMap,
+            total: appIds.length
+        });
+        
+    } catch (error) {
+        console.error('Error in /api/sensortower-data:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 // Serve the main HTML file
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
@@ -528,6 +605,7 @@ app.listen(PORT, () => {
     console.log('  GET  /api/chart-types - List all available chart types for charts-v2 endpoint');
     console.log('  POST /api/search - Search for apps (supports limit & offset for pagination)');
     console.log('  POST /api/app-details - Get detailed app information');
+    console.log('  POST /api/sensortower-data - Get SensorTower analytics data for apps');
     console.log('  GET  /api/health - Health check');
     console.log('');
     console.log('Press Ctrl+C to stop the server');

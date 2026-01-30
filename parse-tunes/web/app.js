@@ -139,7 +139,7 @@ class ParseTunesDemo {
     }
 
     // Display top charts results
-    displayTopCharts(data, append = false) {
+    async displayTopCharts(data, append = false) {
         const resultsDiv = document.getElementById('charts-results');
         const gridDiv = document.getElementById('charts-grid');
         const countSpan = document.getElementById('charts-count');
@@ -155,8 +155,54 @@ class ParseTunesDemo {
         if (!append) {
             gridDiv.innerHTML = '';
         }
+
+        // Check if we need to fetch SensorTower data for apps 195-200
+        const currentOffset = data.pagination ? data.pagination.offset : 0;
+        const appsWithSensorTower = [...data.apps];
         
-        const appsHTML = data.apps.map(app => this.createAppCard(app, 'blue')).join('');
+        // If we're showing apps in the 195-200 range, fetch SensorTower data
+        const appsInRange = data.apps.filter((app, index) => {
+            const globalRank = currentOffset + index + 1;
+            return globalRank >= 195 && globalRank <= 200;
+        });
+
+        if (appsInRange.length > 0) {
+            console.log(`Fetching SensorTower data for ${appsInRange.length} apps in range 195-200`);
+            
+            // Show loading indicator for SensorTower data
+            const sensorTowerLoadingDiv = document.createElement('div');
+            sensorTowerLoadingDiv.className = 'text-center py-4 bg-purple-50 rounded-lg mb-4';
+            sensorTowerLoadingDiv.innerHTML = `
+                <i class="fas fa-spinner loading text-purple-600 mr-2"></i>
+                <span class="text-purple-700">Fetching SensorTower analytics data...</span>
+            `;
+            if (!append) {
+                resultsDiv.appendChild(sensorTowerLoadingDiv);
+            }
+
+            const appIds = appsInRange.map(app => app.id);
+            const countrySelect = document.getElementById('country-select');
+            const countryCode = countrySelect.options[countrySelect.selectedIndex].text.match(/🇺🇸|🇩🇪|🇬🇧|🇻🇳|🇯🇵|🇰🇷|🇨🇳/);
+            const countryMap = {'🇺🇸': 'US', '🇩🇪': 'DE', '🇬🇧': 'GB', '🇻🇳': 'VN', '🇯🇵': 'JP', '🇰🇷': 'KR', '🇨🇳': 'CN'};
+            const country = countryMap[countryCode?.[0]] || 'US';
+            
+            const sensorTowerData = await this.fetchSensorTowerData(appIds, country);
+
+            // Attach SensorTower data to apps
+            appsWithSensorTower.forEach((app, index) => {
+                const globalRank = currentOffset + index + 1;
+                if (globalRank >= 195 && globalRank <= 200 && sensorTowerData[app.id]) {
+                    app.sensorTower = sensorTowerData[app.id];
+                }
+            });
+
+            // Remove loading indicator
+            if (sensorTowerLoadingDiv.parentElement) {
+                sensorTowerLoadingDiv.remove();
+            }
+        }
+        
+        const appsHTML = appsWithSensorTower.map(app => this.createAppCard(app, 'blue')).join('');
         gridDiv.innerHTML += appsHTML;
 
         // Show/hide load more button
@@ -438,6 +484,27 @@ class ParseTunesDemo {
         
         const colors = themeColors[colorTheme] || themeColors.blue;
         
+        // SensorTower data section
+        const sensorTowerSection = app.sensorTower ? `
+            <div class="mt-3 p-2 bg-purple-50 rounded-lg border border-purple-200">
+                <div class="flex items-center mb-1">
+                    <i class="fas fa-chart-line text-purple-600 mr-1 text-xs"></i>
+                    <span class="text-xs font-medium text-purple-700">SensorTower Data</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                        <span class="text-gray-600">Downloads:</span>
+                        <div class="font-medium text-purple-700">${this.formatNumber(app.sensorTower.downloads)}</div>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Revenue:</span>
+                        <div class="font-medium text-purple-700">${this.formatCurrency(app.sensorTower.revenue, app.sensorTower.revenueUnit)}</div>
+                    </div>
+                </div>
+                ${app.sensorTower.error ? `<div class="text-xs text-red-600 mt-1">⚠️ ${app.sensorTower.error}</div>` : ''}
+            </div>
+        ` : '';
+        
         return `
             <div class="bg-gray-50 rounded-lg p-4 card-hover fade-in">
                 <div class="flex items-start justify-between mb-3">
@@ -455,13 +522,14 @@ class ParseTunesDemo {
                 ${app.genre ? `<p class="text-xs text-gray-500 mb-2">${app.genre}</p>` : ''}
                 ${app.price !== undefined ? `<p class="text-sm font-medium ${app.price === 0 ? 'text-green-600' : 'text-blue-600'} mb-2">${app.price === 0 ? 'Free' : '$' + app.price}</p>` : ''}
                 ${app.rating ? `
-                    <div class="flex items-center">
+                    <div class="flex items-center mb-2">
                         <div class="flex text-yellow-400">
                             ${this.generateStars(app.rating)}
                         </div>
                         <span class="text-sm text-gray-600 ml-2">${app.rating} (${app.ratingCount || 0})</span>
                     </div>
                 ` : ''}
+                ${sensorTowerSection}
                 ${app.artwork ? `
                     <div class="mt-3">
                         <img src="${app.artwork}" alt="${app.name}" class="w-12 h-12 rounded-lg object-cover">
@@ -478,6 +546,57 @@ class ParseTunesDemo {
         const sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Format number for display (e.g., 10000 -> 10K)
+    formatNumber(num) {
+        if (num === null || num === undefined) return 'N/A';
+        if (num === 0) return '0';
+        
+        const absNum = Math.abs(num);
+        
+        if (absNum >= 1000000000) {
+            return (num / 1000000000).toFixed(1) + 'B';
+        } else if (absNum >= 1000000) {
+            return (num / 1000000).toFixed(1) + 'M';
+        } else if (absNum >= 1000) {
+            return (num / 1000).toFixed(1) + 'K';
+        } else {
+            return num.toString();
+        }
+    }
+
+    // Format currency
+    formatCurrency(cents, currency = 'USD') {
+        if (cents === null || cents === undefined) return 'N/A';
+        const dollars = cents / 100;
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: currency
+        }).format(dollars);
+    }
+
+    // Fetch SensorTower data for apps
+    async fetchSensorTowerData(appIds, country = 'US') {
+        try {
+            const response = await fetch(`${this.baseURL}/api/sensortower-data`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ appIds, country })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.success ? data.data : {};
+        } catch (error) {
+            console.error('Error fetching SensorTower data:', error);
+            return {};
+        }
     }
 
     // Show error message
@@ -673,7 +792,7 @@ class ParseTunesDemo {
     }
 
     // Display Charts V2 results
-    displayChartsV2Results(data, loadMore = false) {
+    async displayChartsV2Results(data, loadMore = false) {
         const resultsDiv = document.getElementById('v2-charts-results');
         const gridDiv = document.getElementById('v2-charts-grid');
         const countSpan = document.getElementById('v2-charts-count');
@@ -699,8 +818,50 @@ class ParseTunesDemo {
 
         paginationInfo.textContent = `Showing ${data.pagination.offset + 1}-${data.pagination.offset + data.apps.length} of ${data.pagination.totalAvailable}`;
 
+        // Check if we need to fetch SensorTower data for apps 195-200
+        const currentOffset = data.pagination.offset;
+        const appsWithSensorTower = [...data.apps];
+        
+        // If we're showing apps in the 195-200 range, fetch SensorTower data
+        const appsInRange = data.apps.filter((app, index) => {
+            const globalRank = currentOffset + index + 1;
+            return globalRank >= 195 && globalRank <= 200;
+        });
+
+        if (appsInRange.length > 0) {
+            console.log(`Fetching SensorTower data for ${appsInRange.length} apps in range 195-200`);
+            
+            // Show loading indicator for SensorTower data
+            const sensorTowerLoadingDiv = document.createElement('div');
+            sensorTowerLoadingDiv.className = 'text-center py-4 bg-purple-50 rounded-lg mb-4';
+            sensorTowerLoadingDiv.innerHTML = `
+                <i class="fas fa-spinner loading text-purple-600 mr-2"></i>
+                <span class="text-purple-700">Fetching SensorTower analytics data...</span>
+            `;
+            if (!loadMore) {
+                resultsDiv.appendChild(sensorTowerLoadingDiv);
+            }
+
+            const appIds = appsInRange.map(app => app.id);
+            const country = document.getElementById('v2-country-select').value.toUpperCase();
+            const sensorTowerData = await this.fetchSensorTowerData(appIds, country);
+
+            // Attach SensorTower data to apps
+            appsWithSensorTower.forEach((app, index) => {
+                const globalRank = currentOffset + index + 1;
+                if (globalRank >= 195 && globalRank <= 200 && sensorTowerData[app.id]) {
+                    app.sensorTower = sensorTowerData[app.id];
+                }
+            });
+
+            // Remove loading indicator
+            if (sensorTowerLoadingDiv.parentElement) {
+                sensorTowerLoadingDiv.remove();
+            }
+        }
+
         // Add apps to grid
-        const appsHTML = data.apps.map(app => this.createAppCard(app, 'orange')).join('');
+        const appsHTML = appsWithSensorTower.map(app => this.createAppCard(app, 'orange')).join('');
         
         if (loadMore) {
             gridDiv.innerHTML += appsHTML;
