@@ -42,7 +42,7 @@ class ParseTunesDemo {
 
     init() {
         this.updateStats();
-        this.showSection('charts-v2'); // Start with the new Charts V2 section
+        // this.showSection('charts-v2'); // Removed to default to Top Charts (Legacy) as defined in HTML
         this.loadChartTypes();
     }
 
