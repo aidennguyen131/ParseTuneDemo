@@ -62,20 +62,20 @@ async function fetchTopApps(request) {
     const { genre, chart, country } = request;
     const ipadCharts = [44, 45, 46]; // iPad chart IDs
     const platform = ipadCharts.includes(chart) ? 30 : 29;
-    
+
     const url = `https://itunes.apple.com/WebObjects/MZStore.woa/wa/viewTop?genreId=${genre}&popId=${chart}`;
-    
+
     const response = await fetch(url, {
         method: 'GET',
         headers: {
             'X-Apple-Store-Front': `${country},${platform}`,
         },
     });
-    
+
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const data = await response.json();
     return data.pageData.segmentedControl.segments[0].pageData.selectedChart.adamIds;
 }
@@ -83,20 +83,20 @@ async function fetchTopApps(request) {
 // Helper function to fetch charts from new MZStoreServices API
 async function fetchChartsV2(request) {
     const { chartType, genre = 36, country = 'us', limit = 100 } = request;
-    
+
     // Validate chart type
     if (!Object.values(chartTypes).includes(chartType)) {
         throw new Error(`Invalid chart type: ${chartType}`);
     }
-    
+
     const url = `https://itunes.apple.com/WebObjects/MZStoreServices.woa/ws/charts?cc=${country}&g=${genre}&name=${chartType}&limit=${limit}`;
-    
+
     const response = await fetch(url);
-    
+
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const data = await response.json();
     return data.resultIds || [];
 }
@@ -106,48 +106,48 @@ async function getAppInfo(appIds, limit = 200) {
     // iTunes lookup API has a limit of ~200 IDs per request
     const maxIds = Math.min(limit, 200);
     const idsToFetch = Array.isArray(appIds) ? appIds.slice(0, maxIds) : [appIds];
-    
+
     // Split into chunks of 50 to avoid URL length limits
     const chunks = [];
     for (let i = 0; i < idsToFetch.length; i += 50) {
         chunks.push(idsToFetch.slice(i, i + 50));
     }
-    
+
     const allResults = [];
-    
+
     for (const chunk of chunks) {
         const idsString = chunk.join(',');
         const url = `https://itunes.apple.com/lookup?id=${idsString}&country=US&entity=software`;
-        
+
         const response = await fetch(url);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
         allResults.push(...data.results);
-        
+
         // Add small delay between requests to be respectful to API
         if (chunks.length > 1) {
             await new Promise(resolve => setTimeout(resolve, 100));
         }
     }
-    
+
     return allResults;
 }
 
 // Helper function to search apps
 async function searchApps(request) {
     const { searchTerm, country = 'US', language = 'en-US' } = request;
-    
+
     // Use iTunes Search API - maximum limit is 200
     const url = `https://itunes.apple.com/search?term=${encodeURIComponent(searchTerm)}&country=${country}&entity=software&limit=200`;
-    
+
     const response = await fetch(url);
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const data = await response.json();
     return data.results;
 }
@@ -168,30 +168,30 @@ app.get('/api/health', (req, res) => {
 app.post('/api/top-charts', async (req, res) => {
     try {
         const { country, genre, chart, limit = 20, offset = 0 } = req.body;
-        
+
         console.log(`Fetching top charts: country=${country}, genre=${genre}, chart=${chart}, limit=${limit}, offset=${offset}`);
-        
+
         // Fetch app IDs
         const appIds = await fetchTopApps({ country, genre, chart });
         console.log(`Found ${appIds.length} app IDs`);
-        
+
         // Get detailed info for up to 200 apps (or less if not available)
         const maxAppsToFetch = Math.min(200, appIds.length);
         console.log(`Attempting to fetch ${maxAppsToFetch} apps from ${appIds.length} total`);
         const appDetails = await getAppInfo(appIds.slice(0, maxAppsToFetch), maxAppsToFetch);
         console.log(`Got details for ${appDetails.length} apps`);
-        
+
         // Create a map to preserve ranking order
         const appDetailsMap = new Map();
         appDetails.forEach(app => {
             appDetailsMap.set(app.trackId.toString(), app);
         });
-        
+
         // Format all apps in correct ranking order
         const allFormattedApps = appIds.slice(0, maxAppsToFetch).map((appId, index) => {
             const app = appDetailsMap.get(appId.toString());
             if (!app) return null;
-            
+
             return {
                 id: app.trackId,
                 name: app.trackName,
@@ -205,20 +205,20 @@ app.post('/api/top-charts', async (req, res) => {
                 rank: index + 1
             };
         }).filter(app => app !== null);
-        
+
         // Apply pagination
         const startIndex = Math.max(0, offset);
         const endIndex = Math.min(allFormattedApps.length, startIndex + limit);
         const paginatedApps = allFormattedApps.slice(startIndex, endIndex);
-        
+
         // Check if there are more apps available beyond what we fetched
         const totalFetched = allFormattedApps.length;
         const totalAvailable = appIds.length;
         const currentEnd = offset + paginatedApps.length;
         const hasMore = currentEnd < Math.min(totalAvailable, 200); // Max 200 apps
-        
+
         console.log(`Pagination debug: totalFetched=${totalFetched}, totalAvailable=${totalAvailable}, currentEnd=${currentEnd}, hasMore=${hasMore}`);
-        
+
         res.json({
             success: true,
             apps: paginatedApps,
@@ -232,7 +232,7 @@ app.post('/api/top-charts', async (req, res) => {
                 nextOffset: hasMore ? currentEnd : null
             }
         });
-        
+
     } catch (error) {
         console.error('Error in /api/top-charts:', error);
         res.status(500).json({
@@ -246,9 +246,9 @@ app.post('/api/top-charts', async (req, res) => {
 app.post('/api/charts-v2', async (req, res) => {
     try {
         const { chartType, genre = 36, country = 'us', limit = 25, offset = 0, maxFetch = 100 } = req.body;
-        
+
         console.log(`Fetching charts v2: chartType=${chartType}, genre=${genre}, country=${country}, limit=${limit}, offset=${offset}`);
-        
+
         // Validate required parameters
         if (!chartType) {
             return res.status(400).json({
@@ -256,11 +256,11 @@ app.post('/api/charts-v2', async (req, res) => {
                 error: 'chartType is required'
             });
         }
-        
+
         // Fetch app IDs from charts API
         const appIds = await fetchChartsV2({ chartType, genre, country, limit: maxFetch });
         console.log(`Found ${appIds.length} app IDs from charts API`);
-        
+
         if (appIds.length === 0) {
             return res.json({
                 success: true,
@@ -275,24 +275,24 @@ app.post('/api/charts-v2', async (req, res) => {
                 }
             });
         }
-        
+
         // Get detailed info for the apps (up to 200 max due to iTunes lookup API limits)
         const maxAppsToFetch = Math.min(200, appIds.length);
         console.log(`Attempting to fetch details for ${maxAppsToFetch} apps from ${appIds.length} total`);
         const appDetails = await getAppInfo(appIds.slice(0, maxAppsToFetch), maxAppsToFetch);
         console.log(`Got details for ${appDetails.length} apps`);
-        
+
         // Create a map to preserve ranking order
         const appDetailsMap = new Map();
         appDetails.forEach(app => {
             appDetailsMap.set(app.trackId.toString(), app);
         });
-        
+
         // Format all apps in correct ranking order
         const allFormattedApps = appIds.slice(0, maxAppsToFetch).map((appId, index) => {
             const app = appDetailsMap.get(appId.toString());
             if (!app) return null;
-            
+
             return {
                 id: app.trackId,
                 name: app.trackName,
@@ -306,20 +306,20 @@ app.post('/api/charts-v2', async (req, res) => {
                 rank: index + 1
             };
         }).filter(app => app !== null);
-        
+
         // Apply pagination
         const startIndex = Math.max(0, offset);
         const endIndex = Math.min(allFormattedApps.length, startIndex + limit);
         const paginatedApps = allFormattedApps.slice(startIndex, endIndex);
-        
+
         // Check if there are more apps available beyond what we fetched
         const totalFetched = allFormattedApps.length;
         const totalAvailable = appIds.length;
         const currentEnd = offset + paginatedApps.length;
         const hasMore = currentEnd < Math.min(totalAvailable, 200); // Max 200 apps
-        
+
         console.log(`Pagination debug: totalFetched=${totalFetched}, totalAvailable=${totalAvailable}, currentEnd=${currentEnd}, hasMore=${hasMore}`);
-        
+
         res.json({
             success: true,
             apps: paginatedApps,
@@ -337,7 +337,7 @@ app.post('/api/charts-v2', async (req, res) => {
                 nextOffset: hasMore ? currentEnd : null
             }
         });
-        
+
     } catch (error) {
         console.error('Error in /api/charts-v2:', error);
         res.status(500).json({
@@ -351,13 +351,13 @@ app.post('/api/charts-v2', async (req, res) => {
 app.post('/api/search', async (req, res) => {
     try {
         const { searchTerm, country, language, limit = 25, offset = 0 } = req.body;
-        
+
         console.log(`Searching apps: term="${searchTerm}", country=${country}, limit=${limit}, offset=${offset}`);
-        
+
         // Search for apps (iTunes Search API has its own limit of ~200 results)
         const searchResults = await searchApps({ searchTerm, country, language });
         console.log(`Found ${searchResults.length} search results`);
-        
+
         // Format all results
         const allFormattedApps = searchResults.map(app => ({
             id: app.trackId,
@@ -371,12 +371,12 @@ app.post('/api/search', async (req, res) => {
             url: app.trackViewUrl,
             description: app.description
         }));
-        
+
         // Apply pagination
         const startIndex = Math.max(0, offset);
         const endIndex = Math.min(allFormattedApps.length, startIndex + limit);
         const paginatedApps = allFormattedApps.slice(startIndex, endIndex);
-        
+
         res.json({
             success: true,
             apps: paginatedApps,
@@ -388,7 +388,7 @@ app.post('/api/search', async (req, res) => {
                 nextOffset: endIndex < allFormattedApps.length ? endIndex : null
             }
         });
-        
+
     } catch (error) {
         console.error('Error in /api/search:', error);
         res.status(500).json({
@@ -406,7 +406,7 @@ app.get('/api/chart-types', (req, res) => {
             name: value,
             displayName: value.replace(/([A-Z])/g, ' $1').trim() // Convert camelCase to readable format
         }));
-        
+
         res.json({
             success: true,
             chartTypes: availableCharts,
@@ -418,7 +418,7 @@ app.get('/api/chart-types', (req, res) => {
                 }))
             }
         });
-        
+
     } catch (error) {
         console.error('Error in /api/chart-types:', error);
         res.status(500).json({
@@ -432,22 +432,22 @@ app.get('/api/chart-types', (req, res) => {
 app.post('/api/app-details', async (req, res) => {
     try {
         const { appId } = req.body;
-        
+
         console.log(`Fetching app details for ID: ${appId}`);
-        
+
         // Get app details
         const appDetails = await getAppInfo([appId]);
-        
+
         if (appDetails.length === 0) {
             return res.status(404).json({
                 success: false,
                 error: 'App not found'
             });
         }
-        
+
         const app = appDetails[0];
         console.log(`Got details for app: ${app.trackName}`);
-        
+
         // Format the response
         const formattedApp = {
             id: app.trackId,
@@ -472,14 +472,91 @@ app.post('/api/app-details', async (req, res) => {
             minimumOsVersion: app.minimumOsVersion,
             bundleId: app.bundleId
         };
-        
+
         res.json({
             success: true,
             app: formattedApp
         });
-        
+
     } catch (error) {
         console.error('Error in /api/app-details:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// Helper function to fetch SensorTower data
+async function fetchSensorTowerData(appId, country = 'US') {
+    try {
+        const url = `https://app.sensortower.com/api/ios/apps/${appId}?country=${country}`;
+
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`SensorTower API error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Extract the data we need
+        return {
+            downloads: data.worldwide_last_month_downloads?.value || null,
+            revenue: data.worldwide_last_month_revenue?.value || null,
+            revenueUnit: data.worldwide_last_month_revenue?.currency || 'USD'
+        };
+
+    } catch (error) {
+        console.error(`Error fetching SensorTower data for app ${appId}:`, error);
+        return {
+            downloads: null,
+            revenue: null,
+            revenueUnit: 'USD',
+            error: error.message
+        };
+    }
+}
+
+// Get SensorTower data for specific apps
+app.post('/api/sensortower-data', async (req, res) => {
+    try {
+        const { appIds, country = 'US' } = req.body;
+
+        if (!appIds || !Array.isArray(appIds)) {
+            return res.status(400).json({
+                success: false,
+                error: 'appIds array is required'
+            });
+        }
+
+        console.log(`Fetching SensorTower data for ${appIds.length} apps`);
+
+        // Fetch SensorTower data for each app
+        const sensorTowerPromises = appIds.map(async (appId) => {
+            const sensorTowerData = await fetchSensorTowerData(appId, country);
+            return {
+                appId: appId,
+                ...sensorTowerData
+            };
+        });
+
+        // Wait for all requests to complete
+        const sensorTowerResults = await Promise.all(sensorTowerPromises);
+
+        // Create a map for easy lookup
+        const sensorTowerMap = {};
+        sensorTowerResults.forEach(result => {
+            sensorTowerMap[result.appId] = result;
+        });
+
+        res.json({
+            success: true,
+            data: sensorTowerMap,
+            total: appIds.length
+        });
+
+    } catch (error) {
+        console.error('Error in /api/sensortower-data:', error);
         res.status(500).json({
             success: false,
             error: error.message
