@@ -369,6 +369,155 @@ class ParseTunesDemo {
         }
     }
 
+    // Open App Details Modal
+    async openAppDetailsModal(appId) {
+        const modal = document.getElementById('app-details-modal');
+        const loading = document.getElementById('modal-loading');
+        const content = document.getElementById('modal-content');
+
+        // Show modal and loading state
+        modal.classList.remove('hidden');
+        loading.classList.remove('hidden');
+        content.classList.add('hidden');
+        content.innerHTML = '';
+
+        try {
+            const response = await fetch(`${this.baseURL}/api/app-details`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ appId: parseInt(appId) })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            this.renderAppDetailsModal(data.app);
+            content.classList.remove('hidden');
+
+            // Update stats
+            this.stats.totalDetails++;
+            this.updateStats();
+
+        } catch (error) {
+            console.error('Error fetching app details:', error);
+            content.innerHTML = `
+                <div class="text-center py-12 text-red-600">
+                    <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                    <p class="text-lg">Failed to load app details</p>
+                    <p class="text-sm mt-2">${error.message}</p>
+                </div>
+            `;
+            content.classList.remove('hidden');
+        } finally {
+            loading.classList.add('hidden');
+        }
+    }
+
+    // Close App Details Modal
+    closeAppDetailsModal() {
+        const modal = document.getElementById('app-details-modal');
+        modal.classList.add('hidden');
+    }
+
+    // Render App Details in Modal
+    renderAppDetailsModal(app) {
+        const content = document.getElementById('modal-content');
+
+        content.innerHTML = `
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
+                <div class="lg:col-span-2">
+                    <div class="flex items-start mb-6">
+                        ${app.artwork ? `<img src="${app.artwork}" alt="${app.name}" class="w-24 h-24 rounded-xl mr-6 shadow-lg">` : ''}
+                        <div>
+                            <h3 class="text-3xl font-bold text-gray-800 mb-2">${app.name}</h3>
+                            <p class="text-xl text-gray-600 mb-2">by ${app.artistId ? `<a href="https://app.sensortower.com/publisher/ios/${app.artistId}?os=ios&country=US" target="_blank" class="text-blue-600 underline hover:no-underline">${app.artistName}</a>` : app.artistName}</p>
+                            <a href="https://app.sensortower.com/overview/${app.id}?os=ios&country=US" target="_blank" class="text-sm text-blue-600 underline hover:no-underline">App ID: ${app.id} By SensorTower</a>
+                        </div>
+                    </div>
+                     <div class="flex flex-wrap gap-2 mb-6">
+                        ${app.genre ? `<span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">${app.genre}</span>` : ''}
+                        ${app.contentRating ? `<span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">${app.contentRating}</span>` : ''}
+                        ${app.version ? `<span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">v${app.version}</span>` : ''}
+                    </div>
+                    
+                    ${app.description ? `
+                        <div class="mb-8">
+                            <h4 class="font-bold text-gray-800 mb-3 text-lg">Description</h4>
+                            <p class="text-gray-600 leading-relaxed whitespace-pre-wrap text-sm">${app.description}</p>
+                        </div>
+                    ` : ''}
+                    
+                    ${app.releaseNotes ? `
+                        <div class="mb-8 bg-blue-50 p-4 rounded-lg">
+                            <h4 class="font-bold text-gray-800 mb-3 text-lg">What's New</h4>
+                            <p class="text-gray-700 text-sm leading-relaxed">${app.releaseNotes}</p>
+                        </div>
+                    ` : ''}
+
+                    ${app.screenshots && app.screenshots.length > 0 ? `
+                        <div class="mb-8">
+                            <h4 class="font-bold text-gray-800 mb-4 text-lg">Screenshots</h4>
+                            <div class="flex overflow-x-auto space-x-4 pb-4 scrollbar-hide">
+                                ${app.screenshots.map(url => `<img src="${url}" class="h-96 w-auto rounded-lg shadow-md object-cover">`).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <div class="lg:col-span-1">
+                    <div class="bg-gray-50 rounded-xl p-6 border border-gray-100 sticky top-4">
+                        <div class="text-center mb-6">
+                             ${app.price !== undefined ? `<div class="text-3xl font-bold ${app.price === 0 ? 'text-green-600' : 'text-blue-600'} mb-2">${app.price === 0 ? 'Free' : '$' + app.price}</div>` : ''}
+                              ${app.rating ? `
+                                <div class="flex items-center justify-center mb-1">
+                                    <div class="flex text-yellow-400 text-lg">
+                                        ${this.generateStars(app.rating)}
+                                    </div>
+                                    <span class="ml-2 font-bold text-gray-800">${app.rating.toFixed(1)}</span>
+                                </div>
+                                <p class="text-sm text-gray-500">${this.formatNumber(app.ratingCount || 0)} ratings</p>
+                            ` : ''}
+                        </div>
+
+                        ${app.url ? `
+                            <a href="${app.url}" target="_blank" 
+                               class="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-3 px-4 rounded-lg font-bold transition duration-200 mb-6 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                                <i class="fas fa-download mr-2"></i>Get on App Store
+                            </a>
+                        ` : ''}
+                        
+                        <div class="space-y-4 text-sm border-t border-gray-200 pt-6">
+                            ${app.releaseDate ? `
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Updated</span>
+                                    <span class="font-medium text-gray-800">${new Date(app.releaseDate).toLocaleDateString()}</span>
+                                </div>` : ''}
+                            ${app.size ? `
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Size</span>
+                                    <span class="font-medium text-gray-800">${this.formatFileSize(app.size)}</span>
+                                </div>` : ''}
+                             ${app.minimumOsVersion ? `
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Compatibility</span>
+                                    <span class="font-medium text-gray-800">iOS ${app.minimumOsVersion}+</span>
+                                </div>` : ''}
+                            ${app.languages ? `
+                                <div>
+                                    <span class="text-gray-500 block mb-1">Languages</span>
+                                    <span class="font-medium text-gray-800">${app.languages.slice(0, 5).join(', ')}${app.languages.length > 5 ? ' + ' + (app.languages.length - 5) + ' more' : ''}</span>
+                                </div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
     // Display app details
     displayAppDetails(data) {
         const resultsDiv = document.getElementById('details-results');
@@ -383,8 +532,8 @@ class ParseTunesDemo {
                         ${app.artwork ? `<img src="${app.artwork}" alt="${app.name}" class="w-20 h-20 rounded-lg mr-4 shadow-md">` : ''}
                         <div>
                             <h3 class="text-2xl font-bold text-gray-800 mb-2">${app.name}</h3>
-                            <p class="text-lg text-gray-600 mb-1">by ${app.artistName}</p>
-                            <p class="text-sm text-gray-500">App ID: ${app.id}</p>
+                            <p class="text-lg text-gray-600 mb-1">by ${app.artistId ? `<a href="https://app.sensortower.com/publisher/ios/${app.artistId}?os=ios&country=US" target="_blank" class="text-blue-600 hover:underline">${app.artistName}</a>` : app.artistName}</p>
+                            <a href="https://app.sensortower.com/overview/${app.id}?os=ios&country=US" target="_blank" class="text-sm text-blue-600 hover:underline">App ID: ${app.id} By SensorTower</a>
                         </div>
                     </div>
                     
@@ -510,15 +659,19 @@ class ParseTunesDemo {
                 <div class="flex items-start justify-between mb-3">
                     <div class="flex-1">
                         ${app.rank ? `<h4 class="font-semibold ${colors.rank} mb-1">#${app.rank}</h4>` : ''}
-                        <p class="text-sm text-gray-600">App ID: ${app.id}</p>
+                        <a href="https://app.sensortower.com/overview/${app.id}?os=ios&country=US" target="_blank" 
+                           class="inline-block text-xs bg-gray-100 hover:bg-white text-gray-500 hover:text-blue-600 border border-transparent hover:border-gray-200 px-1.5 py-0.5 rounded mt-1 transition duration-200 underline hover:no-underline"
+                           title="View on SensorTower">
+                            App ID: ${app.id} By SensorTower
+                        </a>
                     </div>
-                    <button onclick="demo.fetchAppDetailsById('${app.id}')" 
+                    <button onclick="demo.openAppDetailsModal('${app.id}')" 
                             class="${colors.button} px-3 py-1 rounded text-sm transition duration-200">
                         <i class="fas fa-info mr-1"></i>Details
                     </button>
                 </div>
                 ${app.name ? `<p class="font-medium text-gray-800 mb-1">${app.name}</p>` : ''}
-                ${app.artistName ? `<p class="text-sm text-gray-600 mb-1">by ${app.artistName}</p>` : ''}
+                ${app.artistName ? `<p class="text-sm text-gray-600 mb-1">by ${app.artistId ? `<a href="https://app.sensortower.com/publisher/ios/${app.artistId}?os=ios&country=US" target="_blank" class="hover:text-blue-600 underline hover:no-underline transition-colors duration-200" onclick="event.stopPropagation()">${app.artistName}</a>` : app.artistName}</p>` : ''}
                 ${app.genre ? `<p class="text-xs text-gray-500 mb-2">${app.genre}</p>` : ''}
                 ${app.price !== undefined ? `<p class="text-sm font-medium ${app.price === 0 ? 'text-green-600' : 'text-blue-600'} mb-2">${app.price === 0 ? 'Free' : '$' + app.price}</p>` : ''}
                 ${app.rating ? `
